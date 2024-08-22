@@ -31,9 +31,7 @@ import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvi
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.cafapi.kubernetes.client.api.AppsV1Api;
 import com.github.cafapi.kubernetes.client.client.ApiClient;
-import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1DeploymentList;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -46,35 +44,6 @@ import jakarta.ws.rs.client.ClientBuilder;
  */
 public final class KubernetesClientFactory
 {
-    public static void main(String[] args) throws Exception
-    {
-
-        final ApiClient apiClient = KubernetesClientFactory.createClientWithCertAndToken(
-                "C:\\Users\\RTorney\\Documents\\ca.crt",
-                "C:\\Users\\RTorney\\Documents\\token",
-                "16.103.45.94",
-                6443
-        );
-
-        AppsV1Api appsV1Api = new AppsV1Api(apiClient);
-
-        final IoK8sApiAppsV1DeploymentList deploymentList = appsV1Api.listAppsV1NamespacedDeployment(
-                "private",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                0,
-                null);
-        System.out.println(deploymentList.getItems().size());
-        System.out.println(deploymentList.getItems());
-    }
-
     private static final String SERVICEACCOUNT_ROOT = "/var/run/secrets/kubernetes.io/serviceaccount";
     private static final String SERVICEACCOUNT_CA_PATH = SERVICEACCOUNT_ROOT + "/ca.crt";
     private static final String SERVICEACCOUNT_TOKEN_PATH = SERVICEACCOUNT_ROOT + "/token";
