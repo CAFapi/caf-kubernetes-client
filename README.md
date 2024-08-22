@@ -2,19 +2,21 @@
 
 This project provides a Java client for Kubernetes.
 
-To use, import the dependency into your project:
+## Usage
+
+### Import the dependency
 
 ```xml
 <dependency>
-    <groupId>com.github.cafapi.kubernetes.client</groupId>
+    <groupId>com.github.cafapi.kubernetes</groupId>
     <artifactId>caf-kubernetes-client</artifactId>
     <version>ENTER_VERSION_HERE</version>
 </dependency>
 ```
 
-Then, create a client. You have 2 options:
+### Create a client
 
-Option 1:
+**Option 1:**
 
 This method expects the following environment variables to be present:
 
@@ -30,7 +32,7 @@ and the following files to be present:
 ApiClient apiClient = KubernetesClientFactory.createClientWithCertAndToken();
 ```
 
-Option 2:
+**Option 2:**
 
 This method accepts the ca cert file path, token file path, host and post
 as parameters, which can be useful if you are running the code locally and want
@@ -44,7 +46,7 @@ ApiClient apiClient = KubernetesClientFactory.createClientWithCertAndToken(
                 6443);
 ```
 
-Once the client has been created, call the API:
+### Call the API
 
 ```java
 AppsV1Api appsV1Api = new AppsV1Api(productionApiClient);
