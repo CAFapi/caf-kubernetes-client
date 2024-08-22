@@ -16,7 +16,7 @@ Then, create a client. You have 2 options:
 
 Option 1:
 
-This method expects the following environment variables to be preset:
+This method expects the following environment variables to be present:
 
 - KUBERNETES_SERVICE_HOST
 - KUBERNETES_SERVICE_PORT

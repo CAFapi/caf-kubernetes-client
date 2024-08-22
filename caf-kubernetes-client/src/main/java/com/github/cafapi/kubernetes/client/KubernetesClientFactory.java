@@ -57,7 +57,7 @@ public final class KubernetesClientFactory
     /**
      * Creates a Kubernetes client with a CA cert and Bearer token.
      * <p>
-     * This method expects the following environment variables to be preset:
+     * This method expects the following environment variables to be present:
      * <ul>
      *   <li>KUBERNETES_SERVICE_HOST</li>
      *   <li>KUBERNETES_SERVICE_PORT</li>
