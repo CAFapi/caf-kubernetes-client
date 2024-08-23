@@ -85,7 +85,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/swagger.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/kubernetes/kubernetes/${kubernetesOpenApiSpecVersion}/api/openapi-spec/swagger.json</inputSpec>
                             <generatorName>java</generatorName>
                             <output>${project.build.directory}/openapi-codegen/kubernetes</output>
                             <apiPackage>com.github.cafapi.kubernetes.client.api</apiPackage>
