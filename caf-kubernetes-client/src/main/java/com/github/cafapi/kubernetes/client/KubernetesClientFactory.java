@@ -28,6 +28,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
+import org.glassfish.jersey.jdk.connector.JdkConnectorProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -138,6 +139,9 @@ public final class KubernetesClientFactory
         apiClient.setReadTimeout(0);
 
         final ClientConfig clientConfig = apiClient.getClientConfig();
+        // Explicitly specifying a connector as the default connector does not work with PATCH requests in JDK 16+.
+        // See: https://github.com/eclipse-ee4j/jersey/issues/4825
+        clientConfig.connectorProvider(new JdkConnectorProvider());
         clientConfig.register(jacksonJsonProvider);
 
         final Client client = ClientBuilder.newBuilder()

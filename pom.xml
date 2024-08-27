@@ -101,6 +101,11 @@
                 <version>4.0.0</version>
             </dependency>
             <dependency>
+                <groupId>org.glassfish.jersey.connectors</groupId>
+                <artifactId>jersey-jdk-connector</artifactId>
+                <version>3.1.8</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>3.1.8</version>
