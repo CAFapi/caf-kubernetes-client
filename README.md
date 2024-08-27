@@ -49,7 +49,7 @@ ApiClient apiClient = KubernetesClientFactory.createClientWithCertAndToken(
 ### Call the API
 
 ```java
-AppsV1Api appsV1Api = new AppsV1Api(productionApiClient);
+AppsV1Api appsV1Api = new AppsV1Api(apiClient);
 
 List<IoK8sApiAppsV1Deployment> deployments = appsV1Api.listAppsV1NamespacedDeployment("private").execute().getItems();
 ```
