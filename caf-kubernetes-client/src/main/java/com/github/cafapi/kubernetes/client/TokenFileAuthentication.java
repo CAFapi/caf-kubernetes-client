@@ -13,6 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /*
+ * Class based on this original work:
+ * <a href="https://github.com/kubernetes-client/java/blob/v21.0.1/util/src/main/java/io/kubernetes/client/util/credentials/TokenFileAuthentication.java">
+ * io.kubernetes.client.util.credentials.TokenFileAuthentication
+ * </a>.
+ *
+ * Copyright 2020 The Kubernetes Authors.
+ * Licensed under the Apache License, Version 2.0
+ */
 package com.github.cafapi.kubernetes.client;
 
 import java.io.IOException;
@@ -25,12 +35,14 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 
 /**
- * A Jersey implementation of <a href="https://github.com/kubernetes-client/java/blob/automated-release-21.0.1/util/src/main/java/io/kubernetes/client/util/credentials/TokenFileAuthentication.java">io.kubernetes.client.util.credentials.TokenFileAuthentication</a>.
+ * A Jersey implementation of
+ * <a href="https://github.com/kubernetes-client/java/blob/v21.0.1/util/src/main/java/io/kubernetes/client/util/credentials/TokenFileAuthentication.java">io.kubernetes.client.util.credentials.TokenFileAuthentication</a>.
  * <p>
- * Comment taken from the above class:
- * TODO: prefer OpenAPI backed Authentication once it is available. see details in
- * <a href="https://github.com/OpenAPITools/openapi-generator/pull/6036">https://github.com/OpenAPITools/openapi-generator/pull/6036</a>. currently, the
- * workaround is to hijack the http request.
+ * This TODO has been copied from the aforementioned class:
+ * <p>
+ * <b>TODO:</b> Prefer OpenAPI backed Authentication once it is available. See details in
+ * <a href="https://github.com/OpenAPITools/openapi-generator/pull/6036">openapi-generator#6036</a>. Currently, the workaround is to
+ * hijack the http request.
  */
 final class TokenFileAuthentication implements ClientRequestFilter
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Kubernetes Authors.
+ * Copyright 2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /*
+ * Class based on this original work:
+ * <a href="https://github.com/kubernetes-client/java/blob/v21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java">
+ * io.kubernetes.client.util.ClientBuilder.java
+ * </a>.
+ *
+ * Copyright 2020 The Kubernetes Authors.
+ * Licensed under the Apache License, Version 2.0
+ */
 package com.github.cafapi.kubernetes.client;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyManagementException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -42,10 +50,6 @@ import com.github.cafapi.kubernetes.client.client.ApiClient;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 
-/**
- * This class is loosely based on
- * <a href="https://github.com/kubernetes-client/java/blob/v21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java">io.kubernetes.client.util.ClientBuilder.java</a>.
- */
 public final class KubernetesClientFactory
 {
     private static final String SERVICEACCOUNT_ROOT = "/var/run/secrets/kubernetes.io/serviceaccount";
@@ -63,14 +67,14 @@ public final class KubernetesClientFactory
      * <p>
      * This method expects the following environment variables to be present:
      * <ul>
-     *   <li>KUBERNETES_SERVICE_HOST</li>
-     *   <li>KUBERNETES_SERVICE_PORT</li>
+     * <li>KUBERNETES_SERVICE_HOST</li>
+     * <li>KUBERNETES_SERVICE_PORT</li>
      * </ul>
      * <p>
      * and the following files to be present:
      * <ul>
-     *   <li>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</li>
-     *   <li>/var/run/secrets/kubernetes.io/serviceaccount/token</li>
+     * <li>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</li>
+     * <li>/var/run/secrets/kubernetes.io/serviceaccount/token</li>
      * </ul>
      *
      * @return a client configured to communicate with Kubernetes using a CA cert and Bearer token.
@@ -89,18 +93,18 @@ public final class KubernetesClientFactory
         }
 
         return createClientWithCertAndToken(
-                SERVICEACCOUNT_CA_PATH,
-                SERVICEACCOUNT_TOKEN_PATH,
-                host,
-                Integer.parseInt(port));
+            SERVICEACCOUNT_CA_PATH,
+            SERVICEACCOUNT_TOKEN_PATH,
+            host,
+            Integer.parseInt(port));
     }
 
     // Visible for testing
     public static ApiClient createClientWithCertAndToken(
-            final String caCertPath,
-            final String tokenPath,
-            final String host,
-            final int port
+        final String caCertPath,
+        final String tokenPath,
+        final String host,
+        final int port
     ) throws FailedToCreateKubernetesClientException
     {
         //
@@ -120,7 +124,7 @@ public final class KubernetesClientFactory
             final KeyStore keyStore = newEmptyKeyStore();
             keyStore.setCertificateEntry("ca-cert", caCert);
 
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             trustManagerFactory.init(keyStore);
 
             final SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -129,7 +133,6 @@ public final class KubernetesClientFactory
             //
             // ObjectMapper
             //
-
             final ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
             final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider(objectMapper);
@@ -137,7 +140,6 @@ public final class KubernetesClientFactory
             //
             // ApiClient
             //
-
             final ApiClient apiClient = new ApiClient();
             apiClient.setBasePath(new URI("https", null, host, port, null, null, null).toString());
             apiClient.setReadTimeout(0);
@@ -149,22 +151,21 @@ public final class KubernetesClientFactory
             clientConfig.register(jacksonJsonProvider);
 
             final Client client = ClientBuilder.newBuilder()
-                    .withConfig(clientConfig)
-                    .sslContext(sslContext)
-                    .hostnameVerifier(new Rfc2818HostnameVerifier())
-                    .register(new TokenFileAuthentication(tokenPath))
-                    .build();
+                .withConfig(clientConfig)
+                .sslContext(sslContext)
+                .hostnameVerifier(new Rfc2818HostnameVerifier())
+                .register(new TokenFileAuthentication(tokenPath))
+                .build();
 
             apiClient.setHttpClient(client);
 
             return apiClient;
-        } catch (final IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException | URISyntaxException |
-                       KeyManagementException e) {
+        } catch (final GeneralSecurityException | IOException | URISyntaxException e) {
             throw new FailedToCreateKubernetesClientException(e);
         }
     }
 
-    private static KeyStore newEmptyKeyStore() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException
+    private static KeyStore newEmptyKeyStore() throws GeneralSecurityException, IOException
     {
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);

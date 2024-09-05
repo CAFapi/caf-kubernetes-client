@@ -13,6 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /*
+ * Class based on this original work:
+ * <a href="https://github.com/square/okhttp/blob/parent-5.0.0-alpha.14/okhttp/src/main/kotlin/okhttp3/internal/tls/OkHostnameVerifier.kt">
+ * OkHostnameVerifier.kt
+ * </a>.
+ *
+ * Copyright 2024 Square, Inc.
+ * Licensed under the Apache License, Version 2.0
+ */
 package com.github.cafapi.kubernetes.client;
 
 import java.security.cert.CertificateParsingException;
@@ -27,7 +37,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 
 /**
- * A Java implementation of <a href="https://github.com/square/okhttp/blob/parent-5.0.0-alpha.14/okhttp/src/main/kotlin/okhttp3/internal/tls/OkHostnameVerifier.kt">OkHostnameVerifier.kt</a>.
+ * A Java implementation of OkHostnameVerifier.kt
  */
 final class Rfc2818HostnameVerifier implements HostnameVerifier
 {
@@ -38,7 +48,7 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
     public boolean verify(final String host, final SSLSession session)
     {
         try {
-            final X509Certificate certificate = (X509Certificate)session.getPeerCertificates()[0];
+            final X509Certificate certificate = (X509Certificate) session.getPeerCertificates()[0];
             return verify(host, certificate);
         } catch (final SSLException e) {
             return false;
@@ -76,7 +86,8 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
         return false;
     }
 
-    private boolean verifyHostname(final String hostname, final String pattern) {
+    private boolean verifyHostname(final String hostname, final String pattern)
+    {
         if (hostname == null || pattern == null || hostname.isEmpty() || pattern.isEmpty()) {
             return false;
         }
@@ -108,7 +119,9 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
 
     private String canonicalizeHost(final String host)
     {
-        if (host == null) return null;
+        if (host == null) {
+            return null;
+        }
         return host.endsWith(".") ? host : host + ".";
     }
 
@@ -117,11 +130,15 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
         final List<String> altNames = new ArrayList<>();
         try {
             final Collection<List<?>> sanEntries = certificate.getSubjectAlternativeNames();
-            if (sanEntries == null) return altNames;
+            if (sanEntries == null) {
+                return altNames;
+            }
             for (final List<?> sanEntry : sanEntries) {
-                if (sanEntry == null || sanEntry.size() < 2) continue;
-                if (((Integer)sanEntry.get(0)) == type) {
-                    altNames.add((String)sanEntry.get(1));
+                if (sanEntry == null || sanEntry.size() < 2) {
+                    continue;
+                }
+                if (((Integer) sanEntry.get(0)) == type) {
+                    altNames.add((String) sanEntry.get(1));
                 }
             }
         } catch (final CertificateParsingException ignored) {
