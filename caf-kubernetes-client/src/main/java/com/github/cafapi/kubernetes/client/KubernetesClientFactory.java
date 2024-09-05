@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Open Text.
+ * Copyright 2020 The Kubernetes Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,14 @@ package com.github.cafapi.kubernetes.client;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 
 import javax.net.ssl.SSLContext;
@@ -39,9 +44,7 @@ import jakarta.ws.rs.client.ClientBuilder;
 
 /**
  * This class is loosely based on
- * <a href="https://github.com/kubernetes-client/java/blob/automated-release-21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java#L70">io.kubernetes.client.util.ClientBuilder.java</a>,
- * which we stopped using because it brought in a lot of unwanted dependencies (such as the AWS SDK, Google Protocol Buffers, and the
- * Bouncy Castle libraries).
+ * <a href="https://github.com/kubernetes-client/java/blob/v21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java">io.kubernetes.client.util.ClientBuilder.java</a>.
  */
 public final class KubernetesClientFactory
 {
@@ -71,9 +74,9 @@ public final class KubernetesClientFactory
      * </ul>
      *
      * @return a client configured to communicate with Kubernetes using a CA cert and Bearer token.
-     * @throws Exception if the client could not be created for any reason.
+     * @throws FailedToCreateKubernetesClientException if the client could not be created for any reason.
      */
-    public static ApiClient createClientWithCertAndToken() throws Exception
+    public static ApiClient createClientWithCertAndToken() throws FailedToCreateKubernetesClientException
     {
         final String host = System.getenv(ENV_SERVICE_HOST);
         if (host == null || host.isEmpty()) {
@@ -89,8 +92,7 @@ public final class KubernetesClientFactory
                 SERVICEACCOUNT_CA_PATH,
                 SERVICEACCOUNT_TOKEN_PATH,
                 host,
-                Integer.parseInt(port)
-        );
+                Integer.parseInt(port));
     }
 
     // Visible for testing
@@ -99,64 +101,70 @@ public final class KubernetesClientFactory
             final String tokenPath,
             final String host,
             final int port
-    ) throws Exception
+    ) throws FailedToCreateKubernetesClientException
     {
         //
         // SSLContext
         //
+        try {
+            final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            final Certificate caCert;
+            try (final FileInputStream caCertFileInputStream = new FileInputStream(caCertPath)) {
+                caCert = certificateFactory.generateCertificate(caCertFileInputStream);
+            } catch (final IOException e) {
+                throw new FailedToCreateKubernetesClientException("Cannot read ca cert file: " + caCertPath, e);
+            } catch (final CertificateException e) {
+                throw new FailedToCreateKubernetesClientException(e);
+            }
 
-        final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        final Certificate caCert;
-        try (final FileInputStream caCertFileInputStream = new FileInputStream(caCertPath)) {
-            caCert = certificateFactory.generateCertificate(caCertFileInputStream);
-        } catch (final IOException e) {
-            throw new RuntimeException("Cannot read ca cert file: " + caCertPath, e);
+            final KeyStore keyStore = newEmptyKeyStore();
+            keyStore.setCertificateEntry("ca-cert", caCert);
+
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore);
+
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+
+            //
+            // ObjectMapper
+            //
+
+            final ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider(objectMapper);
+
+            //
+            // ApiClient
+            //
+
+            final ApiClient apiClient = new ApiClient();
+            apiClient.setBasePath(new URI("https", null, host, port, null, null, null).toString());
+            apiClient.setReadTimeout(0);
+
+            final ClientConfig clientConfig = apiClient.getClientConfig();
+            // Explicitly specifying a connector as the default connector does not work with PATCH requests in JDK 16+.
+            // See: https://github.com/eclipse-ee4j/jersey/issues/4825
+            clientConfig.connectorProvider(new JdkConnectorProvider());
+            clientConfig.register(jacksonJsonProvider);
+
+            final Client client = ClientBuilder.newBuilder()
+                    .withConfig(clientConfig)
+                    .sslContext(sslContext)
+                    .hostnameVerifier(new Rfc2818HostnameVerifier())
+                    .register(new TokenFileAuthentication(tokenPath))
+                    .build();
+
+            apiClient.setHttpClient(client);
+
+            return apiClient;
+        } catch (final IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException | URISyntaxException |
+                       KeyManagementException e) {
+            throw new FailedToCreateKubernetesClientException(e);
         }
-
-        final KeyStore keyStore = newEmptyKeyStore();
-        keyStore.setCertificateEntry("ca-cert", caCert);
-
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(keyStore);
-
-        final SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
-
-        //
-        // ObjectMapper
-        //
-
-        final ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider(objectMapper);
-
-        //
-        // ApiClient
-        //
-
-        final ApiClient apiClient = new ApiClient();
-        apiClient.setBasePath(new URI("https", null, host, port, null, null, null).toString());
-        apiClient.setReadTimeout(0);
-
-        final ClientConfig clientConfig = apiClient.getClientConfig();
-        // Explicitly specifying a connector as the default connector does not work with PATCH requests in JDK 16+.
-        // See: https://github.com/eclipse-ee4j/jersey/issues/4825
-        clientConfig.connectorProvider(new JdkConnectorProvider());
-        clientConfig.register(jacksonJsonProvider);
-
-        final Client client = ClientBuilder.newBuilder()
-                .withConfig(clientConfig)
-                .sslContext(sslContext)
-                .hostnameVerifier(new Rfc2818HostnameVerifier())
-                .register(new TokenFileAuthentication(tokenPath))
-                .build();
-
-        apiClient.setHttpClient(client);
-
-        return apiClient;
     }
 
-    private static KeyStore newEmptyKeyStore() throws Exception
+    private static KeyStore newEmptyKeyStore() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException
     {
         final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);

@@ -70,7 +70,7 @@
     <properties>
         <copyrightYear>2024</copyrightYear>
         <copyrightNotice>Copyright ${copyrightYear} Open Text.</copyrightNotice>
-        <kubernetesOpenApiSpecVersion>release-1.31</kubernetesOpenApiSpecVersion>
+        <kubernetesOpenApiSpecVersion>v1.31.0</kubernetesOpenApiSpecVersion>
     </properties>
 
     <dependencyManagement>
@@ -134,17 +134,19 @@
     </dependencyManagement>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>7.2.0</version>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>7.2.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 </project>
