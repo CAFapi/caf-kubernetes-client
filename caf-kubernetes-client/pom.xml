@@ -28,7 +28,8 @@
     </parent>
     
     <artifactId>caf-kubernetes-client</artifactId>
-    
+    <name>caf-kubernetes-client</name>
+
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
